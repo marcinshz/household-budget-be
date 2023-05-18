@@ -1,8 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class UserCredentialsDto{
+export class CreateWalletInputDto {
     @ApiProperty()
-    username:string;
+    name: string;
     @ApiProperty()
-    password:string;
+    userId: string;
 }
