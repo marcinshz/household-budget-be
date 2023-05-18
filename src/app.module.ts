@@ -5,6 +5,9 @@ import { UserModule } from './user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './user/user.entity';
 import { AuthModule } from './auth/auth.module';
+import { ExpenseModule } from './expense/expense.module';
+import { WalletModule } from './wallet/wallet.module';
+import { IncomeModule } from './income/income.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -15,10 +18,14 @@ import { AuthModule } from './auth/auth.module';
       password:'admin',
       database:'household-budget',
       entities:[User],
-      synchronize:true
+      synchronize:true,
+      autoLoadEntities:true
     }),
     UserModule,
-    AuthModule
+    AuthModule,
+    ExpenseModule,
+    WalletModule,
+    IncomeModule
   ],
   controllers: [AppController],
   providers: [AppService],
