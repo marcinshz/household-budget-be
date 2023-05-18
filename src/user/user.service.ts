@@ -22,6 +22,10 @@ export class UserService {
     }
 
     async createUser(credentials: UserCredentialsDto): Promise<User> {
+        const existingUser = await this.findUser(credentials.username);
+
+        if (existingUser) throw new Error('Username taken');
+
         const user = await this.userRepository.create(credentials);
 
         return await this.userRepository.save(user);
