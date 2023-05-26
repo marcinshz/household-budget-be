@@ -8,26 +8,32 @@ import { AuthModule } from './auth/auth.module';
 import { ExpenseModule } from './expense/expense.module';
 import { WalletModule } from './wallet/wallet.module';
 import { IncomeModule } from './income/income.module';
+import { CategoryModule } from './category/category.module';
+import { Wallet } from './wallet/wallet.entity';
+import { Expense } from './expense/expense.entity';
+import { Income } from './income/income.entity';
+import { Category } from './category/category.entity';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
-      type:'postgres',
-      host:'localhost',
+      type: 'postgres',
+      host: 'localhost',
       port: 5432,
-      username:'postgres',
-      password:'admin',
-      database:'household-budget',
-      entities:[User],
-      synchronize:true,
-      autoLoadEntities:true
+      username: 'postgres',
+      password: 'admin',
+      database: 'household-budget',
+      entities: [User, Wallet, Expense, Income, Category],
+      synchronize: true,
+      autoLoadEntities: true
     }),
     UserModule,
     AuthModule,
     ExpenseModule,
     WalletModule,
-    IncomeModule
+    IncomeModule,
+    CategoryModule
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

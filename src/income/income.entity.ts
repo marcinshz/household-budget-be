@@ -1,14 +1,15 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Wallet } from "src/wallet/wallet.entity";
-import { IncomeCategory } from "./income.types";
+import { Category } from "src/category/category.entity";
 
 @Entity()
 export class Income {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column()
-    category: IncomeCategory;
+    @OneToOne(() => Category)
+    @JoinColumn()
+    category: Category;
 
     @Column()
     value: number;

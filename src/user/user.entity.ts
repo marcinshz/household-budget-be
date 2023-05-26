@@ -1,3 +1,4 @@
+import { Category } from 'src/category/category.entity';
 import { Wallet } from 'src/wallet/wallet.entity';
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 
@@ -14,4 +15,7 @@ export class User{
 
     @OneToMany(() => Wallet, wallet => wallet.user)
     wallets:Wallet;
+
+    @OneToMany(() => Category, category => category.user)
+    categories:Category
 }
