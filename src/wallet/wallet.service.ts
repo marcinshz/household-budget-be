@@ -14,12 +14,16 @@ export class WalletService {
         private userService: UserService
     ) { }
 
-    async getWallet(name: string): Promise<Wallet> {
+    async findWallet(name: string): Promise<Wallet> {
         return await this.walletRepository.findOneBy({ name });
     }
 
+    async findWalletById(id: string): Promise<Wallet> {
+        return await this.walletRepository.findOneBy({ id });
+    }
+
     async createWallet(createWalletInputDto: CreateWalletInputDto): Promise<Wallet> {
-        const existingWallet = await this.getWallet(createWalletInputDto.name);
+        const existingWallet = await this.findWallet(createWalletInputDto.name);
         if (existingWallet) throw new Error('Wallet name taken')
         const user = await this.userService.findUserById(createWalletInputDto.userId);
         if (!user) throw new NotFoundException("User not found");

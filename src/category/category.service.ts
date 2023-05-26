@@ -30,6 +30,10 @@ export class CategoryService {
         })
     }
 
+    async getCategoryById(id: string): Promise<Category> {
+        return await this.categoryRepository.findOneBy({ id });
+    }
+
     async createDefaultCategory(createDefaultCategoryDto: CreateDefaultCategoryDto): Promise<Category> {
         const existingCategory = await this.getDefaultCategory(createDefaultCategoryDto.name, createDefaultCategoryDto.type);
 
@@ -56,6 +60,6 @@ export class CategoryService {
     }
 
     async removeCustomCategory(id: string) {
-        return await this.categoryRepository.delete({id});
+        return await this.categoryRepository.delete({ id });
     }
 }
