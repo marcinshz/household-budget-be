@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Param, Post } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { Category } from './category.entity';
 import { ApiTags } from '@nestjs/swagger';
@@ -18,5 +18,10 @@ export class CategoryController {
     @Post('custom-category')
     async createCustomCategory(@Body() createCustomCategoryInputDto: CreateCustomCategoryInputDto): Promise<Category> {
         return await this.categoryService.createCustomCategory(createCustomCategoryInputDto);
+    }
+
+    @Delete(':id')
+    async removeCustomCategory(@Param('id') id: string) {
+        return await this.categoryService.removeCustomCategory(id);
     }
 }

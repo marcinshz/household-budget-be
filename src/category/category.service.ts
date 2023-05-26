@@ -7,18 +7,7 @@ import { CreateCustomCategoryInputDto } from './dtos/create-custom-category-inpu
 import { User } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { CreateCustomCategoryDto } from './dtos/create-custom-category.dto';
-
-/* 
-    tworzenie defaultowej:
-    sprawdza czy nie istnieje defaultowa o takiej nazwie {name, user=null}
-    
-    tworzenie customowej:
-    sprawdza czy nie istnieje defaultowa o takiej nazwie {name, user=null}
-    sprawdza czy nie istnieje customowa tego uzytkownika o takiej nazwie {name, user}    
-
-*/
-
-
+import { CategoryType } from './category-types';
 @Injectable()
 export class CategoryService {
     constructor(
@@ -27,26 +16,22 @@ export class CategoryService {
         private userService: UserService
     ) { }
 
-    async getCustomCategory(name: string, user: User): Promise<Category> {
-        if (!user) user = null;
-        const category = await this.categoryRepository.findOne({
-            relations: { user: true },
-            where: { name, user: user }
-        })
-        console.log('user', user)
-        console.log('category', category)
-        return category
-    }
-
-    async getDefaultCategory(name: string): Promise<Category> {
+    async getCustomCategory(name: string, user: User, type: CategoryType): Promise<Category> {
         return await this.categoryRepository.findOne({
             relations: { user: true },
-            where: { name, user: IsNull() }
+            where: { name, user: user, type }
+        })
+    }
+
+    async getDefaultCategory(name: string, type: CategoryType): Promise<Category> {
+        return await this.categoryRepository.findOne({
+            relations: { user: true },
+            where: { name, user: IsNull(), type }
         })
     }
 
     async createDefaultCategory(createDefaultCategoryDto: CreateDefaultCategoryDto): Promise<Category> {
-        const existingCategory = await this.getDefaultCategory(createDefaultCategoryDto.name);
+        const existingCategory = await this.getDefaultCategory(createDefaultCategoryDto.name, createDefaultCategoryDto.type);
 
         if (existingCategory) throw new Error("Category already exists");
 
@@ -59,14 +44,18 @@ export class CategoryService {
         const user = await this.userService.findUserById(createCustomCategoryInputDto.userId);
         if (!user) throw new NotFoundException("User not found");
 
-        const existingCustomCategory = await this.getCustomCategory(createCustomCategoryInputDto.name, user);
-        const existingDefaultCategory = await this.getDefaultCategory(createCustomCategoryInputDto.name);
+        const existingCustomCategory = await this.getCustomCategory(createCustomCategoryInputDto.name, user, createCustomCategoryInputDto.type);
+        const existingDefaultCategory = await this.getDefaultCategory(createCustomCategoryInputDto.name, createCustomCategoryInputDto.type);
         if (existingCustomCategory || existingDefaultCategory) throw new Error("Category already exists");
 
-        const createCustomCategoryDto = new CreateCustomCategoryDto(createCustomCategoryInputDto.name, user);
+        const createCustomCategoryDto = new CreateCustomCategoryDto(createCustomCategoryInputDto.name, user, createCustomCategoryInputDto.type);
 
         const category = await this.categoryRepository.create(createCustomCategoryDto);
 
         return await this.categoryRepository.save(category);
+    }
+
+    async removeCustomCategory(id: string) {
+        return await this.categoryRepository.delete({id});
     }
 }

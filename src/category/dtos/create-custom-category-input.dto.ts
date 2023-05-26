@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { CategoryType } from "../category-types";
 
 export class CreateCustomCategoryInputDto{
     @ApiProperty()
@@ -6,4 +7,7 @@ export class CreateCustomCategoryInputDto{
 
     @ApiProperty()
     userId:string;
+
+    @ApiProperty()
+    type:CategoryType;
 }
