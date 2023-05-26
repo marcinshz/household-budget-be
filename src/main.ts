@@ -42,12 +42,18 @@ Wplyw:
 -data
 
 Cel:
--typ
--wartosc
+-name
+-docelowa kwota
+-wallet (indywidualny ktory bedzie sie tworzyl specjalnie dla tego celu i bedzie mozna na niego przelac lub z niego zabrac)
 -deadline
 -start
+-note
 
-
+Limit:
+-kategoria wydatku
+-wartość
+-deadline
+-start
 
 
 
