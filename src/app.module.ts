@@ -15,6 +15,7 @@ import { Income } from './income/income.entity';
 import { Category } from './category/category.entity';
 import { TransactionModule } from './transaction/transaction.module';
 import { GoalModule } from './goal/goal.module';
+import { LimitModule } from './limit/limit.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -35,7 +36,8 @@ import { GoalModule } from './goal/goal.module';
     IncomeModule,
     CategoryModule,
     TransactionModule,
-    GoalModule
+    GoalModule,
+    LimitModule
   ],
   controllers: [AppController],
   providers: [AppService],
