@@ -1,7 +1,13 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Category } from "src/category/category.entity";
 
 export class CreateExpenseInputDto {
+    constructor(categoryId: string, value: number, note: string, walletId: string) {
+        this.categoryId = categoryId;
+        this.value = value;
+        this.note = note;
+        this.walletId = walletId;
+    }
+
     @ApiProperty()
     categoryId: string;
     @ApiProperty()

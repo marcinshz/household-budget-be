@@ -13,6 +13,7 @@ import { Wallet } from './wallet/wallet.entity';
 import { Expense } from './expense/expense.entity';
 import { Income } from './income/income.entity';
 import { Category } from './category/category.entity';
+import { TransactionModule } from './transaction/transaction.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -31,7 +32,8 @@ import { Category } from './category/category.entity';
     ExpenseModule,
     WalletModule,
     IncomeModule,
-    CategoryModule
+    CategoryModule,
+    TransactionModule
   ],
   controllers: [AppController],
   providers: [AppService],
