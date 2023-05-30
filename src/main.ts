@@ -5,6 +5,12 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.enableCors({
+    origin: ['http://localhost:5173'],
+    methods: ['GET', 'POST', 'DELETE', 'PATCH', 'PUT'],
+    credentials: true,
+  })
+
   const config = new DocumentBuilder()
     .setVersion('1.0')
     .addTag('Household Budget')
