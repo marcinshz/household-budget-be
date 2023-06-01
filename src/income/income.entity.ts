@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Wallet } from "src/wallet/wallet.entity";
 import { Category } from "src/category/category.entity";
 
@@ -7,7 +7,7 @@ export class Income {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @OneToOne(() => Category)
+    @ManyToOne(() => Category)
     @JoinColumn()
     category: Category;
 

@@ -6,6 +6,7 @@ import { WalletService } from 'src/wallet/wallet.service';
 import { CategoryService } from 'src/category/category.service';
 import { CreateExpenseInputDto } from 'src/expense/dtos/create-expense-input.dto';
 import { CreateExpenseDto } from 'src/expense/dtos/create-expense.dto';
+import { Wallet } from 'src/wallet/wallet.entity';
 
 @Injectable()
 export class IncomeService {
@@ -22,13 +23,14 @@ export class IncomeService {
 
         if (!wallet) throw new NotFoundException("Wallet not found");
         if (!category) throw new NotFoundException("Category not found");
-
+        
         const { value, note } = createIncomeInputDto;
-
+        
         const createIncomeDto = new CreateExpenseDto(wallet, category, value, note);
-
         const createdIncome = await this.incomeRepository.create(createIncomeDto);
-
         return await this.incomeRepository.save(createdIncome);
+    }
+    async getIncomes(wallet: Wallet): Promise<Income[]> {
+        return await this.incomeRepository.findBy({ wallet });
     }
 }

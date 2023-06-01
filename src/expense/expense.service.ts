@@ -6,6 +6,7 @@ import { WalletService } from 'src/wallet/wallet.service';
 import { CategoryService } from 'src/category/category.service';
 import { CreateExpenseInputDto } from './dtos/create-expense-input.dto';
 import { CreateExpenseDto } from './dtos/create-expense.dto';
+import { Wallet } from 'src/wallet/wallet.entity';
 
 @Injectable()
 export class ExpenseService {
@@ -30,5 +31,9 @@ export class ExpenseService {
         const createdExpense = await this.expenseRepository.create(createExpenseDto);
 
         return await this.expenseRepository.save(createdExpense);
+    }
+
+    async getExpenses(wallet: Wallet): Promise<Expense[]> {
+        return await this.expenseRepository.findBy({ wallet });
     }
 }

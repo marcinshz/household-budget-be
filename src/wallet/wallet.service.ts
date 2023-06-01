@@ -5,6 +5,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateWalletInputDto } from './dtos/create-wallet-input.dto';
 import { UserService } from 'src/user/user.service';
 import { CreateWalletDto } from './dtos/create-wallet.dto';
+import { Expense } from 'src/expense/expense.entity';
+import { Income } from 'src/income/income.entity';
+import { WalletCompleteInfoDto } from './dtos/wallet-complete-info.dto';
 
 @Injectable()
 export class WalletService {
@@ -33,5 +36,30 @@ export class WalletService {
         const wallet = await this.walletRepository.create(createWalletDto);
 
         return await this.walletRepository.save(wallet);
+    }
+
+    async getUserWallets(userId: string): Promise<WalletCompleteInfoDto[]> {
+        const user = await this.userService.findUserById(userId);
+        if (!user) throw new NotFoundException("User not found");
+
+        const wallets = await this.walletRepository.find({
+            relations: { incomes: true, expenses: true },
+            where: { user }
+        })
+
+        const walletsCompleteInfoDto = wallets.map((wallet: Wallet) => {
+            const { id, name, incomes, expenses } = wallet;
+            let value = 0;
+
+            wallet.incomes.forEach((income: Income) => {
+                value += income.value;
+            })
+            wallet.expenses.forEach((expense: Expense) => {
+                value -= expense.value;
+            })
+            return new WalletCompleteInfoDto(id, name, value, incomes, expenses);
+        })
+
+        return walletsCompleteInfoDto;
     }
 }
