@@ -43,7 +43,7 @@ export class WalletService {
         if (!user) throw new NotFoundException("User not found");
 
         const wallets = await this.walletRepository.find({
-            relations: { incomes: true, expenses: true },
+            relations:['incomes', 'expenses', 'incomes.category', 'expenses.category'],
             where: { user }
         })
 
