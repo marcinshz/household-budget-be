@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { Expense } from './expense.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WalletService } from 'src/wallet/wallet.service';
@@ -35,5 +35,14 @@ export class ExpenseService {
 
     async getExpenses(wallet: Wallet): Promise<Expense[]> {
         return await this.expenseRepository.findBy({ wallet });
+    }
+
+    async getExpensessFromPeriod(walletId: string, days: number): Promise<Expense[]> {
+        const date = new Date();
+        date.setDate(date.getDate() - days);
+
+        return await this.expenseRepository.findBy({
+            createdAt: MoreThan(date)
+        })
     }
 }

@@ -62,4 +62,8 @@ export class CategoryService {
     async removeCustomCategory(id: string) {
         return await this.categoryRepository.delete({ id });
     }
+
+    async getCategoriesByType(type: CategoryType): Promise<Category[]> {
+        return await this.categoryRepository.findBy({ type })
+    }
 }
