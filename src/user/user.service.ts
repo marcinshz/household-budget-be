@@ -11,6 +11,9 @@ export class UserService {
         private userRepository: Repository<User>,
     ) { }
 
+    async getUsers(): Promise<User[]> {
+        return await this.userRepository.find();
+    }
     async findUser(username: string): Promise<User> {
         return await this.userRepository.findOneBy({
             username
@@ -18,8 +21,9 @@ export class UserService {
     }
 
     async findUserById(id: string): Promise<User> {
-        return await this.userRepository.findOneBy({
-            id
+        return await this.userRepository.findOne({
+            where: { id },
+            relations: ["wallets", "wallets.expenses", "wallets.incomes"]
         });
     }
 

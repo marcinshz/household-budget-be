@@ -16,11 +16,11 @@ export class GoalService {
 
     async createGoal(createGoalInputDto: CreateGoalInputDto): Promise<Goal> {
         const { name, start, deadline, note, value, userId } = createGoalInputDto;
-        const wallet = await this.walletService.createWallet({ name, userId });
+        const wallet = await this.walletService.createWallet({ name, balance:0, userId });
 
         const createGoalDto = new CreateGoalDto(name, start, deadline, value, note, wallet)
 
-        const createdGoal = await this.goalRepository.create(createGoalDto);
+        const createdGoal = this.goalRepository.create(createGoalDto);
 
         return await this.goalRepository.save(createdGoal);
     }

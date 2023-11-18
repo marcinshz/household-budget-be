@@ -14,7 +14,7 @@ export class User{
     password:string;
 
     @OneToMany(() => Wallet, wallet => wallet.user)
-    wallets:Wallet;
+    wallets:Wallet[];
 
     @OneToMany(() => Category, category => category.user)
     categories:Category

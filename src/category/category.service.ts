@@ -1,37 +1,39 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Category } from './category.entity';
-import { IsNull, Repository } from 'typeorm';
-import { CreateDefaultCategoryDto } from './dtos/create-default-category.dto';
-import { CreateCustomCategoryInputDto } from './dtos/create-custom-category-input.dto';
-import { User } from 'src/user/user.entity';
-import { UserService } from 'src/user/user.service';
-import { CreateCustomCategoryDto } from './dtos/create-custom-category.dto';
-import { CategoryType } from './category-types';
+import {Injectable, NotFoundException} from '@nestjs/common';
+import {InjectRepository} from '@nestjs/typeorm';
+import {Category} from './category.entity';
+import {IsNull, Repository} from 'typeorm';
+import {CreateDefaultCategoryDto} from './dtos/create-default-category.dto';
+import {CreateCustomCategoryInputDto} from './dtos/create-custom-category-input.dto';
+import {User} from 'src/user/user.entity';
+import {UserService} from 'src/user/user.service';
+import {CreateCustomCategoryDto} from './dtos/create-custom-category.dto';
+import {CategoryType} from './category-types';
+
 @Injectable()
 export class CategoryService {
     constructor(
         @InjectRepository(Category)
         private categoryRepository: Repository<Category>,
         private userService: UserService
-    ) { }
+    ) {
+    }
 
     async getCustomCategory(name: string, user: User, type: CategoryType): Promise<Category> {
         return await this.categoryRepository.findOne({
-            relations: { user: true },
-            where: { name, user: user, type }
+            relations: {user: true},
+            where: {name, user: user, type}
         })
     }
 
     async getDefaultCategory(name: string, type: CategoryType): Promise<Category> {
         return await this.categoryRepository.findOne({
-            relations: { user: true },
-            where: { name, user: IsNull(), type }
+            relations: {user: true},
+            where: {name, user: IsNull(), type}
         })
     }
 
     async getCategoryById(id: string): Promise<Category> {
-        return await this.categoryRepository.findOneBy({ id });
+        return await this.categoryRepository.findOneBy({id});
     }
 
     async createDefaultCategory(createDefaultCategoryDto: CreateDefaultCategoryDto): Promise<Category> {
@@ -60,10 +62,18 @@ export class CategoryService {
     }
 
     async removeCustomCategory(id: string) {
-        return await this.categoryRepository.delete({ id });
+        return await this.categoryRepository.delete({id});
     }
 
-    async getCategoriesByType(type: CategoryType): Promise<Category[]> {
-        return await this.categoryRepository.findBy({ type })
+    async getUserCategories(userId: string): Promise<{ incomes: Category[], expenses: Category[] }> {
+        const categories = await this.categoryRepository.createQueryBuilder('category')
+            .where('category.user.id = :userId', {userId})
+            .orWhere('category.user IS NULL')
+            .getMany();
+
+        return {
+            incomes: categories.filter(category => category.type === CategoryType.INCOME),
+            expenses: categories.filter(category => category.type === CategoryType.EXPENSE)
+        }
     }
 }

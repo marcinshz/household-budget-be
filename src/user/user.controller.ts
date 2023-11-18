@@ -12,4 +12,9 @@ export class UserController {
     async createUser(@Body() credentials: UserCredentialsDto): Promise<User> {
         return await this.userService.createUser(credentials);
     }
+
+    @Get()
+    async getUsers():Promise<User[]>{
+        return await this.userService.getUsers();
+    }
 }

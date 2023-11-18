@@ -5,4 +5,6 @@ export class CreateWalletInputDto {
     name: string;
     @ApiProperty()
     userId: string;
+    @ApiProperty()
+    balance: number;
 }

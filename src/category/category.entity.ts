@@ -1,9 +1,10 @@
-import { User } from "src/user/user.entity";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { CategoryType } from "./category-types";
+import {User} from "src/user/user.entity";
+import {Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
+import {CategoryType} from "./category-types";
 
 @Entity()
 export class Category {
+    //TODO ADD NOTE COLUMN
     @PrimaryGeneratedColumn('uuid')
     id: string;
 

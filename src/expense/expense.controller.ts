@@ -13,8 +13,8 @@ export class ExpenseController {
     async createExpense(@Body() createExpenseInputDto: CreateExpenseInputDto): Promise<Expense> {
         return await this.expenseService.createExpense(createExpenseInputDto);
     }
-    @Get('/:walletId/:days')
-    async getIncomesFromPeriod(@Param('walletId') walletId: string, @Param('days') days: number): Promise<Expense[]> {
-        return await this.expenseService.getExpensessFromPeriod(walletId,days);
+    @Get('/:userId/:days')
+    async getExpensesFromPeriod(@Param('userId') userId: string, @Param('days') days: number): Promise<Expense[]> {
+        return await this.expenseService.getUserExpensessFromPeriod(userId, days);
     }
 }
