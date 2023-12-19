@@ -119,7 +119,7 @@ export class WalletService {
         _.forEach(tmp, (value, yearKey) => {
             _.forEach(tmp[yearKey], (value, monthKey) => {
                 copyMonthly[yearKey][monthKey] = this.getTransactionsGroupedByCategory(tmp[yearKey][monthKey]);
-                tmp[yearKey][monthKey] = _.groupBy(tmp[yearKey][monthKey], (item) => new Date(item.createdAt).getDate() + 1);
+                tmp[yearKey][monthKey] = _.groupBy(tmp[yearKey][monthKey], (item) => new Date(item.createdAt).getDate());
             })
         })
         let copyDaily = cloneDeep(tmp);
