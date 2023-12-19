@@ -10,6 +10,7 @@ import {Income} from "../income/income.entity";
 import {Expense} from "../expense/expense.entity";
 
 var _ = require('lodash');
+var cloneDeep = require('lodash/cloneDeep');
 
 @Injectable()
 export class WalletService {
@@ -43,57 +44,16 @@ export class WalletService {
         });
     }
 
-    async getUserWalletsExtended(userId: string, period: string): Promise<Wallet[]> {
+    async getUserWalletsExtended(userId: string): Promise<Wallet[]> {
         const user = await this.userService.findUserById(userId);
         if (!user) throw new NotFoundException("User not found");
 
-        const now = new Date();
-        let threshold: Date;
-
-        switch (period) {
-            case "Last month":
-                threshold = new Date(now.getFullYear(), now.getMonth(), 1);
-                break;
-            case "Last 3 months":
-                threshold = new Date(now.getFullYear(), now.getMonth() - 3, 1);
-                break;
-            case "Last 6 months":
-                threshold = new Date(now.getFullYear(), now.getMonth() - 6, 1);
-                break;
-            case "Last year":
-                threshold = new Date(now.getFullYear(), 1, 1,);
-                break;
-            default:
-                break;
-        }
-
-        let wallets = await this.walletRepository.find({
+        return await this.walletRepository.find({
             relations: ['incomes', 'incomes.category', 'expenses', 'expenses.category'],
             where: {
                 user: {id: user.id},
             }
         });
-
-        wallets = wallets.map((wallet) => {
-            const filteredIncomes = wallet.incomes.filter(income => {
-                const thresholdTime = threshold.getTime();
-                const incomeTime = income.createdAt.getTime();
-                return incomeTime >= thresholdTime;
-            });
-            const filteredExpenses = wallet.expenses.filter(expense => {
-                const thresholdTime = threshold.getTime();
-                const expenseTime = expense.createdAt.getTime();
-                return expenseTime >= thresholdTime;
-            });
-
-            return {
-                ...wallet,
-                incomes: filteredIncomes,
-                expenses: filteredExpenses
-            }
-        })
-
-        return wallets;
     }
 
     getCategorySum(items: Income[] | Expense[]): { name: string, value: number }[] {
@@ -136,6 +96,7 @@ export class WalletService {
         _.forEach(tmp, (value, key) => {
             tmp[key] = _.groupBy((tmp[key]), (item) => new Date(item.createdAt).getMonth() + 1);
         })
+
         _.forEach(tmp, (value, yearKey) => {
             _.forEach(tmp[yearKey], (value, monthKey) => {
                 tmp[yearKey][monthKey] = _.groupBy(tmp[yearKey][monthKey], (item) => new Date(item.createdAt).getDate() + 1);
@@ -147,12 +108,121 @@ export class WalletService {
         return tmp;
     }
 
-    async getWalletsOverview(getWalletsOverviewInputDto: GetWalletsOverviewInputDto): Promise<any> {
-        const {userId, wallets, period} = getWalletsOverviewInputDto;
+    getTransactionsGroupedByDateTest(items: Income[] | Expense[]) {
+        let tmp = _.groupBy(items, (item) => new Date(item.createdAt).getFullYear());
+        let copyYearly = cloneDeep(tmp);
+        _.forEach(tmp, (value, key) => {
+            copyYearly[key] = this.getTransactionsGroupedByCategory(tmp[key]);
+            tmp[key] = _.groupBy((tmp[key]), (item) => new Date(item.createdAt).getMonth() + 1);
+        })
+        let copyMonthly = cloneDeep(tmp);
+        _.forEach(tmp, (value, yearKey) => {
+            _.forEach(tmp[yearKey], (value, monthKey) => {
+                copyMonthly[yearKey][monthKey] = this.getTransactionsGroupedByCategory(tmp[yearKey][monthKey]);
+                tmp[yearKey][monthKey] = _.groupBy(tmp[yearKey][monthKey], (item) => new Date(item.createdAt).getDate() + 1);
+            })
+        })
+        let copyDaily = cloneDeep(tmp);
+        _.forEach(tmp, (value, yearKey) => {
+            _.forEach(tmp[yearKey], (value, monthKey) => {
+                _.forEach(tmp[yearKey][monthKey], (value, dayKey) => {
+                    copyDaily[yearKey][monthKey][dayKey] = this.getTransactionsGroupedByCategory(tmp[yearKey][monthKey][dayKey]);
+                })
+            })
+        })
+
+        const mergedObject = {};
+
+        Object.keys(copyYearly).forEach(year => {
+            mergedObject[year] = {
+                overview: {...copyYearly[year]},
+                months: {}
+            };
+
+            if (copyMonthly[year]) {
+                Object.keys(copyMonthly[year]).forEach(month => {
+                    mergedObject[year].months[month] = {
+                        overview: {...copyMonthly[year][month]},
+                        days: {}
+                    };
+
+                    if (copyDaily[year] && copyDaily[year][month]) {
+                        Object.keys(copyDaily[year][month]).forEach(day => {
+                            mergedObject[year].months[month].days[day] = {
+                                overview: {...copyDaily[year][month][day]},
+                                list: tmp[year][month][day]
+                            };
+                        });
+                    }
+                });
+            }
+        });
+
+
+        return mergedObject;
+    }
+
+    async getWalletsOverviewTest(getWalletsOverviewInputDto: GetWalletsOverviewInputDto): Promise<any> {
+        const {userId, wallets} = getWalletsOverviewInputDto;
         const user = await this.userService.findUserById(userId);
         if (!user) throw new NotFoundException("User not found");
         let walletIds = wallets.filter(wallet => wallet.checked).map(wallet => wallet.id);
-        const tmp = await this.getUserWalletsExtended(userId, period);
+        const tmp = await this.getUserWalletsExtended(userId);
+
+        let incomes = [];
+        let expenses = [];
+
+        let categoryIncomeLabels = [];
+        let categoryIncomeValues = [];
+        let categoryExpenseLabels = [];
+        let categoryExpenseValues = [];
+
+
+        tmp.forEach(wallet => {
+            if (walletIds.includes(wallet.id)) {
+                incomes = incomes.concat(wallet.incomes);
+                expenses = expenses.concat(wallet.expenses);
+                let tmp = this.getTransactionsGroupedByCategory(wallet.incomes);
+                categoryIncomeLabels = categoryIncomeLabels.concat(tmp.labels);
+                categoryIncomeValues = categoryIncomeValues.concat(tmp.values);
+                tmp = this.getTransactionsGroupedByCategory(wallet.expenses);
+                categoryExpenseLabels = categoryExpenseLabels.concat(tmp.labels);
+                categoryExpenseValues = categoryExpenseValues.concat(tmp.values);
+            }
+        })
+        incomes.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        expenses.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+        const pies = {
+            incomes: {
+                labels: categoryIncomeLabels,
+                datasets: [{data: categoryIncomeValues}]
+            },
+            expenses: {
+                labels: categoryExpenseLabels,
+                datasets: [{data: categoryExpenseValues}]
+            }
+        }
+
+        const incomesGrouped = this.getTransactionsGroupedByDateTest(incomes);
+        const expensesGrouped = this.getTransactionsGroupedByDateTest(expenses);
+
+
+        return {
+            incomes,
+            expenses,
+            pies,
+            incomesGrouped,
+            expensesGrouped
+        }
+    }
+
+    async getWalletsOverview(getWalletsOverviewInputDto: GetWalletsOverviewInputDto): Promise<any> {
+        const {userId, wallets} = getWalletsOverviewInputDto;
+        const user = await this.userService.findUserById(userId);
+        if (!user) throw new NotFoundException("User not found");
+        let walletIds = wallets.filter(wallet => wallet.checked).map(wallet => wallet.id);
+        const tmp = await this.getUserWalletsExtended(userId);
 
         let incomes = [];
         let expenses = [];
