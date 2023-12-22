@@ -302,7 +302,7 @@ export class WalletService {
     async updateBalance(walletId: string, value: number, positive: boolean): Promise<UpdateResult> {
         let wallet = await this.walletRepository.findOneBy({id: walletId});
         let newBalance = 0;
-        if (positive) newBalance = wallet.balance + value;
+        if (positive) newBalance = wallet.balanceStamps[0].balance + value;
         else newBalance = wallet.balance - value;
         await this.balanceStampService.createBalanceStamp(wallet, newBalance);
 

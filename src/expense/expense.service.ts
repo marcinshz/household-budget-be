@@ -67,6 +67,7 @@ export class ExpenseService {
                 startDate: limit.start,
                 endDate: limit.deadline
             })
+            .andWhere('expense.category.id = :categoryId', {categoryId: limit.category.id})
             .getMany();
     }
 
