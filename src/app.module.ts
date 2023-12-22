@@ -16,6 +16,7 @@ import { Category } from './category/category.entity';
 import { TransactionModule } from './transaction/transaction.module';
 import { GoalModule } from './goal/goal.module';
 import { LimitModule } from './limit/limit.module';
+import { BalanceStampModule } from './balance-stamp/balance-stamp.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -37,7 +38,8 @@ import { LimitModule } from './limit/limit.module';
     CategoryModule,
     TransactionModule,
     GoalModule,
-    LimitModule
+    LimitModule,
+    BalanceStampModule
   ],
   controllers: [AppController],
   providers: [AppService],

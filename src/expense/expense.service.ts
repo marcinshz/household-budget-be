@@ -1,13 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import {DataSource, MoreThan, Repository} from 'typeorm';
-import { Expense } from './expense.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { WalletService } from 'src/wallet/wallet.service';
-import { CategoryService } from 'src/category/category.service';
-import { CreateExpenseInputDto } from './dtos/create-expense-input.dto';
-import { CreateExpenseDto } from './dtos/create-expense.dto';
-import { Wallet } from 'src/wallet/wallet.entity';
-import { UserService } from 'src/user/user.service';
+import {Injectable, NotFoundException} from '@nestjs/common';
+import {DataSource, Repository} from 'typeorm';
+import {Expense} from './expense.entity';
+import {InjectRepository} from '@nestjs/typeorm';
+import {WalletService} from 'src/wallet/wallet.service';
+import {CategoryService} from 'src/category/category.service';
+import {CreateExpenseInputDto} from './dtos/create-expense-input.dto';
+import {CreateExpenseDto} from './dtos/create-expense.dto';
+import {Wallet} from 'src/wallet/wallet.entity';
+import {UserService} from 'src/user/user.service';
+import {Limit} from "../limit/limit.entity";
 
 @Injectable()
 export class ExpenseService {
@@ -18,7 +19,8 @@ export class ExpenseService {
         private categoryService: CategoryService,
         private userService: UserService,
         private dataSource: DataSource
-    ) { }
+    ) {
+    }
 
     async createExpense(createExpenseInputDto: CreateExpenseInputDto): Promise<Expense> {
         const wallet = await this.walletService.getWalletById(createExpenseInputDto.walletId);
@@ -27,7 +29,7 @@ export class ExpenseService {
         if (!wallet) throw new NotFoundException("Wallet not found");
         if (!category) throw new NotFoundException("Category not found");
 
-        const { value, note, walletId } = createExpenseInputDto;
+        const {value, note, walletId} = createExpenseInputDto;
 
         const createExpenseDto = new CreateExpenseDto(wallet, category, value, note);
 
@@ -40,7 +42,7 @@ export class ExpenseService {
     }
 
     async getExpenses(wallet: Wallet): Promise<Expense[]> {
-        return await this.expenseRepository.findBy({ wallet });
+        return await this.expenseRepository.findBy({wallet});
     }
 
     //git jest ale nie lapie zakresu dat
@@ -58,14 +60,14 @@ export class ExpenseService {
         return expenses;
     }
 
-    async getWalletExpensessFromPeriod(walletId: string, days: number): Promise<Expense[]> {
-        const date = new Date();
-        date.setDate(date.getDate() - days);
-
-        return await this.expenseRepository.find({
-            where: { createdAt: MoreThan(date) },
-            relations: { category: true }
-        })
+    async getCategoryExpensesPeriod(limit: Limit): Promise<Expense[]> {
+        return await this.expenseRepository
+            .createQueryBuilder('expense')
+            .where('expense.createdAt BETWEEN :startDate AND :endDate', {
+                startDate: limit.start,
+                endDate: limit.deadline
+            })
+            .getMany();
     }
 
 

@@ -8,6 +8,7 @@ import {CreateWalletDto} from './dtos/create-wallet.dto';
 import {GetWalletsOverviewInputDto} from "./dtos/get-wallets-overview-input.dto";
 import {Income} from "../income/income.entity";
 import {Expense} from "../expense/expense.entity";
+import {BalanceStampService} from "../balance-stamp/balance-stamp.service";
 
 var _ = require('lodash');
 var cloneDeep = require('lodash/cloneDeep');
@@ -17,29 +18,33 @@ export class WalletService {
     constructor(
         @InjectRepository(Wallet)
         private walletRepository: Repository<Wallet>,
-        private userService: UserService
+        private userService: UserService,
+        private balanceStampService: BalanceStampService
     ) {
     }
 
     async getWallets(): Promise<Wallet[]> {
         return await this.walletRepository.find({
-            relations: ['user', 'incomes', 'incomes.category', 'expenses', 'expenses.category'],
+            relations: ['user', 'incomes', 'incomes.category', 'expenses', 'expenses.category', 'balanceStamps'],
         });
     }
 
     async getWalletById(walletId: string): Promise<Wallet> {
-        const wallet = await this.walletRepository.findOneBy({id: walletId});
+        const wallet = await this.walletRepository.findOne({
+            where: {
+                id: walletId
+            },
+            relations: ['balanceStamps']
+        });
         if (!wallet) throw new NotFoundException("Wallet not found");
 
         return wallet;
     }
 
     async getUserWallets(userId: string): Promise<Wallet[]> {
-        const user = await this.userService.findUserById(userId);
-        if (!user) throw new NotFoundException("User not found");
-
         return await this.walletRepository.find({
-            where: {user: {id: user.id}},
+            relations: ['balanceStamps'],
+            where: {user: {id: userId}},
             order: {balance: 'DESC'}
         });
     }
@@ -56,8 +61,14 @@ export class WalletService {
         });
     }
 
-    getCategorySum(items: Income[] | Expense[]): { name: string, value: number }[] {
-        let values: { name: string, value: number }[] = [];
+    getCategorySum(items: Income[] | Expense[]): {
+        name: string,
+        value: number
+    }[] {
+        let values: {
+            name: string,
+            value: number
+        }[] = [];
 
         items.forEach((item) => {
             const index = values.findIndex(value => value.name === item.category.name);
@@ -164,8 +175,6 @@ export class WalletService {
 
     async getWalletsOverviewTest(getWalletsOverviewInputDto: GetWalletsOverviewInputDto): Promise<any> {
         const {userId, wallets} = getWalletsOverviewInputDto;
-        const user = await this.userService.findUserById(userId);
-        if (!user) throw new NotFoundException("User not found");
         let walletIds = wallets.filter(wallet => wallet.checked).map(wallet => wallet.id);
         const tmp = await this.getUserWalletsExtended(userId);
 
@@ -176,7 +185,6 @@ export class WalletService {
         let categoryIncomeValues = [];
         let categoryExpenseLabels = [];
         let categoryExpenseValues = [];
-
 
         tmp.forEach(wallet => {
             if (walletIds.includes(wallet.id)) {
@@ -192,26 +200,19 @@ export class WalletService {
         })
         incomes.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
         expenses.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-        const pies = {
-            incomes: {
-                labels: categoryIncomeLabels,
-                datasets: [{data: categoryIncomeValues}]
-            },
-            expenses: {
-                labels: categoryExpenseLabels,
-                datasets: [{data: categoryExpenseValues}]
-            }
-        }
+        incomes = incomes.filter((income, index) => {
+            return income.category.name !== 'Internal Transfer';
+        })
+        expenses = expenses.filter((expense, index) => {
+            return expense.category.name !== 'Internal Transfer';
+        })
 
         const incomesGrouped = this.getTransactionsGroupedByDateTest(incomes);
         const expensesGrouped = this.getTransactionsGroupedByDateTest(expenses);
 
-
         return {
             incomes,
             expenses,
-            pies,
             incomesGrouped,
             expensesGrouped
         }
@@ -283,16 +284,27 @@ export class WalletService {
 
         const createWalletDto = new CreateWalletDto(createWalletInputDto.name, createWalletInputDto.balance, user);
 
-        const wallet = this.walletRepository.create(createWalletDto);
+        let wallet = this.walletRepository.create(createWalletDto);
+        wallet = await this.walletRepository.save(wallet);
+        await this.balanceStampService.createBalanceStamp(wallet, createWalletInputDto.balance);
 
-        return await this.walletRepository.save(wallet);
+        return this.getWalletById(wallet.id);
+    }
+
+    async removeWallet(walletId: string): Promise<Wallet> {
+        const wallet = await this.walletRepository.findOne({
+            where: {id: walletId},
+            relations: ['incomes', 'expenses', 'balanceStamps']
+        });
+        return await this.walletRepository.remove(wallet)
     }
 
     async updateBalance(walletId: string, value: number, positive: boolean): Promise<UpdateResult> {
-        let prevBalance = await this.walletRepository.findOneBy({id: walletId}).then(wallet => wallet.balance);
+        let wallet = await this.walletRepository.findOneBy({id: walletId});
         let newBalance = 0;
-        if (positive) newBalance = prevBalance + value;
-        else newBalance = prevBalance - value;
+        if (positive) newBalance = wallet.balance + value;
+        else newBalance = wallet.balance - value;
+        await this.balanceStampService.createBalanceStamp(wallet, newBalance);
 
         return await this.walletRepository.update({id: walletId}, {balance: newBalance});
     }

@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import {ApiProperty} from "@nestjs/swagger";
 
 export class CreateLimitInputDto {
     @ApiProperty()
@@ -9,4 +9,6 @@ export class CreateLimitInputDto {
     start: Date;
     @ApiProperty()
     deadline: Date;
+    @ApiProperty()
+    userId: string;
 }

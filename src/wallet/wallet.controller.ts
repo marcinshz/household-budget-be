@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Param, Post} from '@nestjs/common';
+import {Body, Controller, Delete, Get, Param, Post} from '@nestjs/common';
 import {ApiTags} from '@nestjs/swagger';
 import {WalletService} from './wallet.service';
 import {CreateWalletInputDto} from './dtos/create-wallet-input.dto';
@@ -14,6 +14,11 @@ export class WalletController {
     @Post()
     async createWallet(@Body() createWalletInputDto: CreateWalletInputDto): Promise<Wallet> {
         return await this.walletService.createWallet(createWalletInputDto);
+    }
+
+    @Delete(':walletId')
+    async removeWallet(@Param('walletId') walletId: string): Promise<Wallet> {
+        return await this.walletService.removeWallet(walletId);
     }
 
     @Get()

@@ -1,6 +1,6 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Wallet } from "src/wallet/wallet.entity";
-import { Category } from "src/category/category.entity";
+import {Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
+import {Wallet} from "src/wallet/wallet.entity";
+import {Category} from "src/category/category.entity";
 
 @Entity()
 export class Income {
@@ -17,9 +17,9 @@ export class Income {
     @Column()
     note: string;
 
-    @CreateDateColumn({ type: 'timestamp', default: () => "CURRENT_TIMESTAMP(6)" })
+    @CreateDateColumn({type: 'timestamp', default: () => "CURRENT_TIMESTAMP(6)"})
     createdAt: Date;
 
-    @ManyToOne(() => Wallet, wallet => wallet.incomes)
+    @ManyToOne(() => Wallet, wallet => wallet.incomes, {onDelete: 'CASCADE'})
     wallet: Wallet;
 }

@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import {ApiProperty} from "@nestjs/swagger";
 
 export class CreateTransactionDto {
     @ApiProperty()
@@ -13,8 +13,4 @@ export class CreateTransactionDto {
 
     @ApiProperty()
     value: number;
-
-    @ApiProperty()
-    note: string;
-
 }

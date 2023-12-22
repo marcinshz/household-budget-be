@@ -1,5 +1,6 @@
-import { Category } from "src/category/category.entity";
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import {Category} from "src/category/category.entity";
+import {Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn} from "typeorm";
+import {User} from "../user/user.entity";
 
 @Entity()
 export class Limit {
@@ -18,4 +19,7 @@ export class Limit {
 
     @Column()
     deadline: Date;
+
+    @ManyToOne(() => User, user => user.limits)
+    user: User;
 }
