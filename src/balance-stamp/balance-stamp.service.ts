@@ -4,6 +4,7 @@ import {Repository} from "typeorm";
 import {BalanceStamp} from "./balance-stamp.entity";
 import {Wallet} from "../wallet/wallet.entity";
 import {BalanceStampDto} from "./dtos/balance-stamp.dto";
+import {CreateCustomDateBalanceStampDto} from "./dtos/create-custom-date-balance-stamp.dto";
 
 @Injectable()
 export class BalanceStampService {
@@ -33,5 +34,10 @@ export class BalanceStampService {
             const balanceStamp = this.balanceStampRepository.create(createBalanceStampDto);
             return await this.balanceStampRepository.save(balanceStamp);
         }
+    }
+
+    async createCustomDateBalanceStamp(createCustomDateBalanceStampDto: CreateCustomDateBalanceStampDto): Promise<BalanceStamp> {
+        const balanceStamp = await this.balanceStampRepository.create(createCustomDateBalanceStampDto);
+        return await this.balanceStampRepository.save(balanceStamp);
     }
 }

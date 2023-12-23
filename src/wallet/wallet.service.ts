@@ -9,6 +9,9 @@ import {GetWalletsOverviewInputDto} from "./dtos/get-wallets-overview-input.dto"
 import {Income} from "../income/income.entity";
 import {Expense} from "../expense/expense.entity";
 import {BalanceStampService} from "../balance-stamp/balance-stamp.service";
+import {BalanceStamp} from "../balance-stamp/balance-stamp.entity";
+import {CreateCustomDateBalanceStampDto} from "../balance-stamp/dtos/create-custom-date-balance-stamp.dto";
+import {differenceInDays} from 'date-fns';
 
 var _ = require('lodash');
 var cloneDeep = require('lodash/cloneDeep');
@@ -41,7 +44,35 @@ export class WalletService {
         return wallet;
     }
 
+    async generateLackingBalanceStamps(wallets: Wallet[]) {
+        await Promise.all(wallets.map(async (wallet) => {
+            let latest: BalanceStamp | null = null;
+            wallet.balanceStamps.forEach((stamp: BalanceStamp, index: number) => {
+                if (latest) {
+                    if (new Date(latest.createdAt) < new Date(stamp.createdAt)) latest = stamp;
+                } else latest = stamp;
+            })
+            const daysDifference = differenceInDays(new Date(), new Date(latest.createdAt));
+            if (daysDifference > 0) {
+                for (let i = 1; i <= daysDifference; i++) {
+                    const date = new Date(latest.createdAt);
+                    date.setDate(date.getDate() + i);
+                    const customDateBalanceStamp = new CreateCustomDateBalanceStampDto(latest.balance, wallet, date);
+                    await this.balanceStampService.createCustomDateBalanceStamp(customDateBalanceStamp);
+                }
+            }
+        }));
+    }
+
     async getUserWallets(userId: string): Promise<Wallet[]> {
+        const wallets = await this.walletRepository.find({
+            relations: ['balanceStamps'],
+            where: {user: {id: userId}},
+            order: {balance: 'DESC'}
+        });
+        
+        await this.generateLackingBalanceStamps(wallets);
+
         return await this.walletRepository.find({
             relations: ['balanceStamps'],
             where: {user: {id: userId}},
@@ -300,7 +331,12 @@ export class WalletService {
     }
 
     async updateBalance(walletId: string, value: number, positive: boolean): Promise<UpdateResult> {
-        let wallet = await this.walletRepository.findOneBy({id: walletId});
+        let wallet = await this.walletRepository.findOne({
+            relations: ['balanceStamps'],
+            where: {
+                id: walletId
+            }
+        });
         let newBalance = 0;
         if (positive) newBalance = wallet.balanceStamps[0].balance + value;
         else newBalance = wallet.balance - value;

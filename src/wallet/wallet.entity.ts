@@ -1,7 +1,7 @@
 import {Expense} from "src/expense/expense.entity";
 import {Income} from "src/income/income.entity";
 import {User} from "src/user/user.entity";
-import {Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm";
+import {Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import {BalanceStamp} from "../balance-stamp/balance-stamp.entity";
 
 @Entity()
@@ -26,4 +26,7 @@ export class Wallet {
 
     @ManyToOne(() => User, user => user.wallets)
     user: User;
+
+    @CreateDateColumn({type: 'timestamp', default: () => "CURRENT_TIMESTAMP(6)"})
+    createdAt: Date;
 }
