@@ -1,19 +1,23 @@
-import { Injectable } from '@nestjs/common';
-import { User } from './user.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { UserCredentialsDto } from './dtos/user-credentials.dto';
+import {Injectable} from '@nestjs/common';
+import {User} from './user.entity';
+import {InjectRepository} from '@nestjs/typeorm';
+import {Repository} from 'typeorm';
+import {UserCredentialsDto} from './dtos/user-credentials.dto';
 import * as bcrypt from 'bcrypt';
+import {UpdateUserCurrencyDto} from "./dtos/update-user-currency.dto";
+
 @Injectable()
 export class UserService {
     constructor(
         @InjectRepository(User)
         private userRepository: Repository<User>,
-    ) { }
+    ) {
+    }
 
     async getUsers(): Promise<User[]> {
         return await this.userRepository.find();
     }
+
     async findUser(username: string): Promise<User> {
         return await this.userRepository.findOneBy({
             username
@@ -22,7 +26,7 @@ export class UserService {
 
     async findUserById(id: string): Promise<User> {
         return await this.userRepository.findOne({
-            where: { id },
+            where: {id},
             relations: ["wallets", "wallets.expenses", "wallets.incomes"]
         });
     }
@@ -34,6 +38,12 @@ export class UserService {
         credentials.password = await bcrypt.hash(credentials.password, await bcrypt.genSalt());
         const user = await this.userRepository.create(credentials);
 
+        return await this.userRepository.save(user);
+    }
+
+    async updateUserCurrency(updateUserCurrencyDto: UpdateUserCurrencyDto): Promise<User> {
+        const user = await this.findUserById(updateUserCurrencyDto.userId);
+        user.currency = updateUserCurrencyDto.currency;
         return await this.userRepository.save(user);
     }
 }

@@ -1,11 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Income } from './income.entity';
-import {DataSource, LessThan, MoreThan, Repository} from 'typeorm';
-import { WalletService } from 'src/wallet/wallet.service';
-import { CategoryService } from 'src/category/category.service';
-import { CreateExpenseInputDto } from 'src/expense/dtos/create-expense-input.dto';
-import { CreateExpenseDto } from 'src/expense/dtos/create-expense.dto';
+import {Injectable, NotFoundException} from '@nestjs/common';
+import {InjectRepository} from '@nestjs/typeorm';
+import {Income} from './income.entity';
+import {DataSource, MoreThan, Repository} from 'typeorm';
+import {WalletService} from 'src/wallet/wallet.service';
+import {CategoryService} from 'src/category/category.service';
+import {CreateExpenseInputDto} from 'src/expense/dtos/create-expense-input.dto';
+import {CreateExpenseDto} from 'src/expense/dtos/create-expense.dto';
 
 @Injectable()
 export class IncomeService {
@@ -15,7 +15,8 @@ export class IncomeService {
         private walletService: WalletService,
         private categoryService: CategoryService,
         private dataSource: DataSource
-    ) { }
+    ) {
+    }
 
     async createIncome(createIncomeInputDto: CreateExpenseInputDto): Promise<Income> {
         const wallet = await this.walletService.getWalletById(createIncomeInputDto.walletId);
@@ -24,9 +25,11 @@ export class IncomeService {
         if (!wallet) throw new NotFoundException("Wallet not found");
         if (!category) throw new NotFoundException("Category not found");
 
-        const { value, note, walletId } = createIncomeInputDto;
+        const {value, note, walletId} = createIncomeInputDto;
 
-        const createIncomeDto = new CreateExpenseDto(wallet, category, value, note);
+        let parsedValue = typeof value === 'string' ? parseFloat(value) : value;
+
+        const createIncomeDto = new CreateExpenseDto(wallet, category, parsedValue, note);
         const createdIncome = this.incomeRepository.create(createIncomeDto);
 
         return await this.dataSource.transaction(async () => {
@@ -34,13 +37,14 @@ export class IncomeService {
             return await this.incomeRepository.save(createdIncome);
         })
     }
+
     async getIncomesFromPeriod(walletId: string, days: number): Promise<Income[]> {
         const date = new Date();
         date.setDate(date.getDate() - days);
 
         return await this.incomeRepository.find({
-            where: { createdAt: MoreThan(date) },
-            relations: { category: true }
+            where: {createdAt: MoreThan(date)},
+            relations: {category: true}
         })
     }
 }

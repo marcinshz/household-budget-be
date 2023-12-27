@@ -31,7 +31,9 @@ export class ExpenseService {
 
         const {value, note, walletId} = createExpenseInputDto;
 
-        const createExpenseDto = new CreateExpenseDto(wallet, category, value, note);
+        const parsedValue = typeof value === 'string' ? parseFloat(value) : value;
+
+        const createExpenseDto = new CreateExpenseDto(wallet, category, parsedValue, note);
 
         const createdExpense = this.expenseRepository.create(createExpenseDto);
 
@@ -61,6 +63,7 @@ export class ExpenseService {
     }
 
     async getCategoryExpensesPeriod(limit: Limit): Promise<Expense[]> {
+        //TODO przerobic tak zeby bralo pod uwage caly dzien a nie tylko od startDate
         return await this.expenseRepository
             .createQueryBuilder('expense')
             .where('expense.createdAt BETWEEN :startDate AND :endDate', {

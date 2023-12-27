@@ -1,5 +1,5 @@
 import {Injectable, NotFoundException} from '@nestjs/common';
-import {Repository, UpdateResult} from 'typeorm';
+import {Repository} from 'typeorm';
 import {Wallet} from './wallet.entity';
 import {InjectRepository} from '@nestjs/typeorm';
 import {CreateWalletInputDto} from './dtos/create-wallet-input.dto';
@@ -52,6 +52,7 @@ export class WalletService {
                     if (new Date(latest.createdAt) < new Date(stamp.createdAt)) latest = stamp;
                 } else latest = stamp;
             })
+            if (!latest) return;
             const daysDifference = differenceInDays(new Date(), new Date(latest.createdAt));
             if (daysDifference > 0) {
                 for (let i = 1; i <= daysDifference; i++) {
@@ -67,16 +68,14 @@ export class WalletService {
     async getUserWallets(userId: string): Promise<Wallet[]> {
         const wallets = await this.walletRepository.find({
             relations: ['balanceStamps'],
-            where: {user: {id: userId}},
-            order: {balance: 'DESC'}
+            where: {user: {id: userId}}
         });
-        
+
         await this.generateLackingBalanceStamps(wallets);
 
         return await this.walletRepository.find({
             relations: ['balanceStamps'],
-            where: {user: {id: userId}},
-            order: {balance: 'DESC'}
+            where: {user: {id: userId}}
         });
     }
 
@@ -330,18 +329,18 @@ export class WalletService {
         return await this.walletRepository.remove(wallet)
     }
 
-    async updateBalance(walletId: string, value: number, positive: boolean): Promise<UpdateResult> {
+    async updateBalance(walletId: string, value: number, positive: boolean) {
         let wallet = await this.walletRepository.findOne({
             relations: ['balanceStamps'],
             where: {
                 id: walletId
             }
         });
+        const parsedValue = typeof value === "string" ? parseFloat(value) : value;
+        let currentBalance: number = typeof wallet.balanceStamps[0].balance === "string" ? parseFloat(wallet.balanceStamps[0].balance) : wallet.balanceStamps[0].balance;
         let newBalance = 0;
-        if (positive) newBalance = wallet.balanceStamps[0].balance + value;
-        else newBalance = wallet.balance - value;
-        await this.balanceStampService.createBalanceStamp(wallet, newBalance);
-
-        return await this.walletRepository.update({id: walletId}, {balance: newBalance});
+        if (positive) newBalance = currentBalance + parsedValue;
+        else newBalance = currentBalance - parsedValue;
+        return await this.balanceStampService.createBalanceStamp(wallet, newBalance);
     }
 }

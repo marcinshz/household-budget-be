@@ -12,9 +12,6 @@ export class Wallet {
     @Column()
     name: string;
 
-    @Column()
-    balance: number;
-
     @OneToMany(() => Expense, expense => expense.wallet)
     expenses: Expense[]
 

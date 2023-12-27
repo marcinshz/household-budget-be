@@ -9,7 +9,7 @@ export class BalanceStamp {
     @ManyToOne(() => Wallet, wallet => wallet.balanceStamps, {onDelete: 'CASCADE'})
     wallet: Wallet;
 
-    @Column()
+    @Column('double precision')
     balance: number;
 
     @CreateDateColumn({type: 'timestamp', default: () => "CURRENT_TIMESTAMP(6)"})

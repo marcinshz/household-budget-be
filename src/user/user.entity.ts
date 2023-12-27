@@ -14,8 +14,8 @@ export class User {
     @Column()
     password: string;
 
-    @Column({nullable: true})
-    currency?: string;
+    @Column({default: true})
+    currency: string = 'EUR';
 
     @OneToMany(() => Wallet, wallet => wallet.user)
     wallets: Wallet[];

@@ -29,7 +29,8 @@ export class LimitService {
         if (!category) throw new NotFoundException("Category not found");
         if (!user) throw new NotFoundException("User not found");
 
-        const createLimitDto = new CreateLimitDto(category, value, start, deadline, user);
+        const parsedValue = typeof value === 'string' ? parseFloat(value) : value;
+        const createLimitDto = new CreateLimitDto(category, parsedValue, start, deadline, user);
 
         const createdLimit = this.limitRepository.create(createLimitDto);
 

@@ -11,7 +11,7 @@ export class Limit {
     @JoinColumn()
     category: Category;
 
-    @Column()
+    @Column('double precision')
     value: number;
 
     @Column()
