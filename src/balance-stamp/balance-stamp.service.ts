@@ -5,12 +5,14 @@ import {BalanceStamp} from "./balance-stamp.entity";
 import {Wallet} from "../wallet/wallet.entity";
 import {BalanceStampDto} from "./dtos/balance-stamp.dto";
 import {CreateCustomDateBalanceStampDto} from "./dtos/create-custom-date-balance-stamp.dto";
+import {GoalService} from "../goal/goal.service";
 
 @Injectable()
 export class BalanceStampService {
     constructor(
         @InjectRepository(BalanceStamp)
         private balanceStampRepository: Repository<BalanceStamp>,
+        private goalService: GoalService
     ) {
     }
 
@@ -24,6 +26,7 @@ export class BalanceStampService {
             .getOne();
 
         if (result) {
+            if (wallet.savingsWallet) await this.goalService.updateGoalCompleted(wallet.id, balance);
             return await this.balanceStampRepository.save({
                 ...result,
                 balance,
@@ -32,6 +35,7 @@ export class BalanceStampService {
         } else {
             const createBalanceStampDto = new BalanceStampDto(balance, wallet);
             const balanceStamp = this.balanceStampRepository.create(createBalanceStampDto);
+            if (wallet.savingsWallet) await this.goalService.updateGoalCompleted(wallet.id, balance);
             return await this.balanceStampRepository.save(balanceStamp);
         }
     }

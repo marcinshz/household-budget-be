@@ -1,13 +1,16 @@
-import { Module } from '@nestjs/common';
-import { GoalController } from './goal.controller';
-import { GoalService } from './goal.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Goal } from './goal.entity';
-import { WalletModule } from 'src/wallet/wallet.module';
+import {forwardRef, Module} from '@nestjs/common';
+import {GoalController} from './goal.controller';
+import {GoalService} from './goal.service';
+import {TypeOrmModule} from '@nestjs/typeorm';
+import {Goal} from './goal.entity';
+import {UserModule} from "../user/user.module";
+import {WalletModule} from "../wallet/wallet.module";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Goal]), WalletModule],
-  controllers: [GoalController],
-  providers: [GoalService]
+    imports: [TypeOrmModule.forFeature([Goal]), forwardRef(() => WalletModule), UserModule],
+    controllers: [GoalController],
+    providers: [GoalService],
+    exports: [GoalService]
 })
-export class GoalModule { }
+export class GoalModule {
+}

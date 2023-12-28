@@ -312,7 +312,7 @@ export class WalletService {
         });
         if (existingWallet) throw new Error('User already has a wallet with this name');
 
-        const createWalletDto = new CreateWalletDto(createWalletInputDto.name, createWalletInputDto.balance, user);
+        const createWalletDto = new CreateWalletDto(createWalletInputDto.name, createWalletInputDto.balance, user, createWalletInputDto.savingsWallet);
 
         let wallet = this.walletRepository.create(createWalletDto);
         wallet = await this.walletRepository.save(wallet);

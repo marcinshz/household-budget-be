@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import {ApiProperty} from "@nestjs/swagger";
 
 export class CreateWalletInputDto {
     @ApiProperty()
@@ -7,4 +7,6 @@ export class CreateWalletInputDto {
     userId: string;
     @ApiProperty()
     balance: number;
+    @ApiProperty()
+    savingsWallet: boolean;
 }

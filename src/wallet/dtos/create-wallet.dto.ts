@@ -1,13 +1,15 @@
-import { User } from "src/user/user.entity";
+import {User} from "src/user/user.entity";
 
 export class CreateWalletDto {
-    constructor(name: string, balance:number, user: User) {
+    name: string;
+    balance: number;
+    user: User;
+    savingsWallet?: boolean;
+
+    constructor(name: string, balance: number, user: User, savingsWallet?: boolean) {
         this.name = name;
         this.balance = balance;
         this.user = user;
+        this.savingsWallet = savingsWallet;
     }
-
-    name: string;
-    balance:number;
-    user: User;
 }

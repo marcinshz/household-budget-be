@@ -24,6 +24,9 @@ export class Wallet {
     @ManyToOne(() => User, user => user.wallets)
     user: User;
 
+    @Column({default: false})
+    savingsWallet: boolean = false;
+
     @CreateDateColumn({type: 'timestamp', default: () => "CURRENT_TIMESTAMP(6)"})
     createdAt: Date;
 }

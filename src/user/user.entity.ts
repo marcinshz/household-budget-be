@@ -2,6 +2,7 @@ import {Category} from 'src/category/category.entity';
 import {Wallet} from 'src/wallet/wallet.entity';
 import {Column, Entity, OneToMany, PrimaryGeneratedColumn} from 'typeorm';
 import {Limit} from "../limit/limit.entity";
+import {Goal} from "../goal/goal.entity";
 
 @Entity()
 export class User {
@@ -19,6 +20,9 @@ export class User {
 
     @OneToMany(() => Wallet, wallet => wallet.user)
     wallets: Wallet[];
+    
+    @OneToMany(() => Goal, goal => goal.user)
+    goals: Goal[];
 
     @OneToMany(() => Category, category => category.user)
     categories: Category
