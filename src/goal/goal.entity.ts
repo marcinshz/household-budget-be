@@ -16,7 +16,7 @@ export class Goal {
     @Column()
     deadline: Date;
 
-    @Column()
+    @Column('double precision', {nullable: true})
     value: number;
 
     @Column()
@@ -28,7 +28,8 @@ export class Goal {
     @ManyToOne(() => User, user => user.goals)
     user: User;
 
-    @OneToOne(() => Wallet)
+    //TODO ZROBIC COS ZEBY MOZNA BYLO USUNAC WALLETA BEZ USUWANIA GOAL
+    @OneToOne(() => Wallet, {eager: true, cascade: true, nullable: true})
     @JoinColumn()
     wallet: Wallet;
 }

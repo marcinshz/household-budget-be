@@ -43,9 +43,11 @@ export class GoalService {
             where: {wallet: {id: walletId}},
         })
 
-        if (goal.value <= balance) {
-            goal.completed = true;
-            return await this.goalRepository.save(goal);
+        if (goal) {
+            if (goal.value <= balance) {
+                goal.completed = true;
+                return await this.goalRepository.save(goal);
+            }
         }
         return;
     }
