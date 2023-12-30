@@ -11,7 +11,7 @@ import {Expense} from "../expense/expense.entity";
 import {BalanceStampService} from "../balance-stamp/balance-stamp.service";
 import {BalanceStamp} from "../balance-stamp/balance-stamp.entity";
 import {CreateCustomDateBalanceStampDto} from "../balance-stamp/dtos/create-custom-date-balance-stamp.dto";
-import {differenceInDays} from 'date-fns';
+import {differenceInCalendarDays} from 'date-fns';
 
 var _ = require('lodash');
 var cloneDeep = require('lodash/cloneDeep');
@@ -45,7 +45,7 @@ export class WalletService {
     }
 
     async generateLackingBalanceStamps(wallets: Wallet[]) {
-        await Promise.all(wallets.map(async (wallet) => {
+        return await Promise.all(wallets.map(async (wallet) => {
             let latest: BalanceStamp | null = null;
             wallet.balanceStamps.forEach((stamp: BalanceStamp, index: number) => {
                 if (latest) {
@@ -53,7 +53,7 @@ export class WalletService {
                 } else latest = stamp;
             })
             if (!latest) return;
-            const daysDifference = differenceInDays(new Date(), new Date(latest.createdAt));
+            const daysDifference = differenceInCalendarDays(new Date(), new Date(latest.createdAt));
             if (daysDifference > 0) {
                 for (let i = 1; i <= daysDifference; i++) {
                     const date = new Date(latest.createdAt);
