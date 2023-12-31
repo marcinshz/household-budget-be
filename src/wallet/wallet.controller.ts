@@ -32,12 +32,7 @@ export class WalletController {
     }
 
     @Post('user-wallets-overview')
-    async getWalletsOverview(@Body() getWalletsOverviewInputDto: GetWalletsOverviewInputDto): Promise<any> {
-        return await this.walletService.getWalletsOverview(getWalletsOverviewInputDto);
-    }
-
-    @Post('user-wallets-overview-test')
     async getWalletsOverviewTest(@Body() getWalletsOverviewInputDto: GetWalletsOverviewInputDto): Promise<any> {
-        return await this.walletService.getWalletsOverviewTest(getWalletsOverviewInputDto);
+        return await this.walletService.getWalletsOverview(getWalletsOverviewInputDto);
     }
 }

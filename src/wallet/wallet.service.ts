@@ -44,6 +44,20 @@ export class WalletService {
         return wallet;
     }
 
+    async getUserWallets(userId: string): Promise<Wallet[]> {
+        const wallets = await this.walletRepository.find({
+            relations: ['balanceStamps'],
+            where: {user: {id: userId}}
+        });
+
+        await this.generateLackingBalanceStamps(wallets);
+
+        return await this.walletRepository.find({
+            relations: ['balanceStamps'],
+            where: {user: {id: userId}}
+        });
+    }
+
     async generateLackingBalanceStamps(wallets: Wallet[]) {
         return await Promise.all(wallets.map(async (wallet) => {
             let latest: BalanceStamp | null = null;
@@ -63,20 +77,6 @@ export class WalletService {
                 }
             }
         }));
-    }
-
-    async getUserWallets(userId: string): Promise<Wallet[]> {
-        const wallets = await this.walletRepository.find({
-            relations: ['balanceStamps'],
-            where: {user: {id: userId}}
-        });
-
-        await this.generateLackingBalanceStamps(wallets);
-
-        return await this.walletRepository.find({
-            relations: ['balanceStamps'],
-            where: {user: {id: userId}}
-        });
     }
 
     async getUserWalletsExtended(userId: string): Promise<Wallet[]> {
@@ -132,24 +132,7 @@ export class WalletService {
         };
     }
 
-    getTransactionsGroupedByDate(items: Income[] | Expense[]) {
-        let tmp = _.groupBy(items, (item) => new Date(item.createdAt).getFullYear());
-        _.forEach(tmp, (value, key) => {
-            tmp[key] = _.groupBy((tmp[key]), (item) => new Date(item.createdAt).getMonth() + 1);
-        })
-
-        _.forEach(tmp, (value, yearKey) => {
-            _.forEach(tmp[yearKey], (value, monthKey) => {
-                tmp[yearKey][monthKey] = _.groupBy(tmp[yearKey][monthKey], (item) => new Date(item.createdAt).getDate() + 1);
-                _.forEach(tmp[yearKey][monthKey], (value, dayKey) => {
-                    tmp[yearKey][monthKey][dayKey] = this.getTransactionsGroupedByCategory(tmp[yearKey][monthKey][dayKey]);
-                })
-            })
-        })
-        return tmp;
-    }
-
-    getTransactionsGroupedByDateTest(items: Income[] | Expense[]) {
+    getTransactionsGrouped(items: Income[] | Expense[]) {
         let tmp = _.groupBy(items, (item) => new Date(item.createdAt).getFullYear());
         let copyYearly = cloneDeep(tmp);
         _.forEach(tmp, (value, key) => {
@@ -203,7 +186,7 @@ export class WalletService {
         return mergedObject;
     }
 
-    async getWalletsOverviewTest(getWalletsOverviewInputDto: GetWalletsOverviewInputDto): Promise<any> {
+    async getWalletsOverview(getWalletsOverviewInputDto: GetWalletsOverviewInputDto): Promise<any> {
         const {userId, wallets} = getWalletsOverviewInputDto;
         let walletIds = wallets.filter(wallet => wallet.checked).map(wallet => wallet.id);
         const tmp = await this.getUserWalletsExtended(userId);
@@ -211,21 +194,10 @@ export class WalletService {
         let incomes = [];
         let expenses = [];
 
-        let categoryIncomeLabels = [];
-        let categoryIncomeValues = [];
-        let categoryExpenseLabels = [];
-        let categoryExpenseValues = [];
-
         tmp.forEach(wallet => {
             if (walletIds.includes(wallet.id)) {
                 incomes = incomes.concat(wallet.incomes);
                 expenses = expenses.concat(wallet.expenses);
-                let tmp = this.getTransactionsGroupedByCategory(wallet.incomes);
-                categoryIncomeLabels = categoryIncomeLabels.concat(tmp.labels);
-                categoryIncomeValues = categoryIncomeValues.concat(tmp.values);
-                tmp = this.getTransactionsGroupedByCategory(wallet.expenses);
-                categoryExpenseLabels = categoryExpenseLabels.concat(tmp.labels);
-                categoryExpenseValues = categoryExpenseValues.concat(tmp.values);
             }
         })
         incomes.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
@@ -237,67 +209,12 @@ export class WalletService {
             return expense.category.name !== 'Internal Transfer';
         })
 
-        const incomesGrouped = this.getTransactionsGroupedByDateTest(incomes);
-        const expensesGrouped = this.getTransactionsGroupedByDateTest(expenses);
+        const incomesGrouped = this.getTransactionsGrouped(incomes);
+        const expensesGrouped = this.getTransactionsGrouped(expenses);
 
         return {
             incomes,
             expenses,
-            incomesGrouped,
-            expensesGrouped
-        }
-    }
-
-    async getWalletsOverview(getWalletsOverviewInputDto: GetWalletsOverviewInputDto): Promise<any> {
-        const {userId, wallets} = getWalletsOverviewInputDto;
-        const user = await this.userService.findUserById(userId);
-        if (!user) throw new NotFoundException("User not found");
-        let walletIds = wallets.filter(wallet => wallet.checked).map(wallet => wallet.id);
-        const tmp = await this.getUserWalletsExtended(userId);
-
-        let incomes = [];
-        let expenses = [];
-
-        let categoryIncomeLabels = [];
-        let categoryIncomeValues = [];
-        let categoryExpenseLabels = [];
-        let categoryExpenseValues = [];
-
-
-        tmp.forEach(wallet => {
-            if (walletIds.includes(wallet.id)) {
-                incomes = incomes.concat(wallet.incomes);
-                expenses = expenses.concat(wallet.expenses);
-                let tmp = this.getTransactionsGroupedByCategory(wallet.incomes);
-                categoryIncomeLabels = categoryIncomeLabels.concat(tmp.labels);
-                categoryIncomeValues = categoryIncomeValues.concat(tmp.values);
-                tmp = this.getTransactionsGroupedByCategory(wallet.expenses);
-                categoryExpenseLabels = categoryExpenseLabels.concat(tmp.labels);
-                categoryExpenseValues = categoryExpenseValues.concat(tmp.values);
-            }
-        })
-        incomes.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-        expenses.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-        const pies = {
-            incomes: {
-                labels: categoryIncomeLabels,
-                datasets: [{data: categoryIncomeValues}]
-            },
-            expenses: {
-                labels: categoryExpenseLabels,
-                datasets: [{data: categoryExpenseValues}]
-            }
-        }
-
-        const incomesGrouped = this.getTransactionsGroupedByDate(incomes);
-        const expensesGrouped = this.getTransactionsGroupedByDate(expenses);
-
-
-        return {
-            incomes,
-            expenses,
-            pies,
             incomesGrouped,
             expensesGrouped
         }
@@ -305,11 +222,14 @@ export class WalletService {
 
     async createWallet(createWalletInputDto: CreateWalletInputDto): Promise<Wallet> {
         const user = await this.userService.findUserById(createWalletInputDto.userId);
+
         if (!user) throw new NotFoundException("User not found");
+
         const existingWallet = await this.walletRepository.findOneBy({
             name: createWalletInputDto.name,
             user: {id: createWalletInputDto.userId}
         });
+
         if (existingWallet) throw new Error('User already has a wallet with this name');
 
         const createWalletDto = new CreateWalletDto(createWalletInputDto.name, createWalletInputDto.balance, user, createWalletInputDto.savingsWallet);
