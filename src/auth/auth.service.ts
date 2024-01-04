@@ -4,7 +4,7 @@ import {UserCredentialsDto} from 'src/user/dtos/user-credentials.dto';
 import {UserService} from 'src/user/user.service';
 import * as bcrypt from 'bcrypt';
 import UserAuthenticatedDto from './user-authenticated.dto';
-import {VerifyDto} from "./verify.dto";
+import {User} from "../user/user.entity";
 
 @Injectable()
 export class AuthService {
@@ -27,9 +27,9 @@ export class AuthService {
         }
     }
 
-    async verifyToken(token: string): Promise<VerifyDto> {
+    async verifyToken(token: string): Promise<User> {
         const payload = this.jwtService.verify(token);
         if (!payload) throw new UnauthorizedException();
-        return new VerifyDto(payload.username);
+        return await this.userService.findUser(payload.username);
     }
 }

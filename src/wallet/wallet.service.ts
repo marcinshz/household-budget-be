@@ -51,7 +51,6 @@ export class WalletService {
         });
 
         await this.generateLackingBalanceStamps(wallets);
-
         return await this.walletRepository.find({
             relations: ['balanceStamps'],
             where: {user: {id: userId}}
