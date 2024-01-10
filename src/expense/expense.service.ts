@@ -63,7 +63,6 @@ export class ExpenseService {
     }
 
     async getCategoryExpensesPeriod(limit: Limit): Promise<Expense[]> {
-        //TODO przerobic tak zeby bralo pod uwage caly dzien a nie tylko od startDate
         return await this.expenseRepository
             .createQueryBuilder('expense')
             .where('expense.createdAt BETWEEN :startDate AND :endDate', {

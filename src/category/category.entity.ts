@@ -4,7 +4,6 @@ import {CategoryType} from "./category-types";
 
 @Entity()
 export class Category {
-    //TODO ADD NOTE COLUMN
     @PrimaryGeneratedColumn('uuid')
     id: string;
 

@@ -28,7 +28,6 @@ export class Goal {
     @ManyToOne(() => User, user => user.goals)
     user: User;
 
-    //TODO ZROBIC COS ZEBY MOZNA BYLO USUNAC WALLETA BEZ USUWANIA GOAL
     @OneToOne(() => Wallet, {eager: true, cascade: true, nullable: true})
     @JoinColumn()
     wallet: Wallet;
